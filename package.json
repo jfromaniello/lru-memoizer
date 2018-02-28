@@ -3,7 +3,7 @@
   "description": "Memoize functions results using an lru-cache.",
   "version": "1.11.2",
   "author": "José F. Romaniello <jfromaniello@gmail.com> (http://joseoncode.com)",
-  "types": "./types/lru-memoizer.d.ts"
+  "types": "./types/lru-memoizer.d.ts",
   "repository": {
     "url": "git://github.com/jfromaniello/lru-memoizer.git"
   },
