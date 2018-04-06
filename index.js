@@ -23,6 +23,10 @@ module.exports = function (options) {
     const key = hash.apply(this, arguments);
     cache.del(key);
   }
+  
+  function reset() {
+    cache.reset();
+  }
 
   const result = function () {
     const args       = vfs.apply(null, arguments);
