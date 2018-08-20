@@ -1,6 +1,6 @@
 const memoizer = require('./..');
 const assert   = require('chai').assert;
-const _        = require('lodash');
+const l_noop   = require('lodash.noop');
 
 describe('lru-simultaneos calls', function () {
   var loadTimes = 0, memoized;
@@ -23,8 +23,8 @@ describe('lru-simultaneos calls', function () {
   });
 
   it('should call once', function (done) {
-    memoized(1, 2, _.noop);
-    memoized(1, 2, _.noop);
+    memoized(1, 2, l_noop);
+    memoized(1, 2, l_noop);
     memoized(1, 2, function (err, result) {
       if (err) { return done(err); }
       assert.strictEqual(loadTimes, 1);

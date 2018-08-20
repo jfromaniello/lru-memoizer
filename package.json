@@ -27,7 +27,7 @@
   },
   "devDependencies": {
     "chai": "^3.5.0",
-    "mocha": "~2.2.5",
-    "lodash": "^4.17.4"
+    "lodash.noop": "^3.0.1",
+    "mocha": "~2.2.5"
   }
 }
