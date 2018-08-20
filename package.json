@@ -18,12 +18,16 @@
   },
   "dependencies": {
     "lock": "~0.1.2",
-    "lodash": "^4.17.4",
+    "lodash.assignin": "^4.2.0",
+    "lodash.clonedeep": "^4.5.0",
+    "lodash.pick": "^4.4.0",
+    "lodash.toarray": "^4.4.0",
     "lru-cache": "~4.0.0",
     "very-fast-args": "^1.1.0"
   },
   "devDependencies": {
     "chai": "^3.5.0",
-    "mocha": "~2.2.5"
+    "mocha": "~2.2.5",
+    "lodash": "^4.17.4"
   }
 }

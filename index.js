@@ -1,11 +1,14 @@
-const LRU        = require('lru-cache');
-const _          = require('lodash');
-const lru_params = [ 'max', 'maxAge', 'length', 'dispose', 'stale' ];
-const deepFreeze = require('./lib/freeze');
-const vfs        = require('very-fast-args');
+const LRU         = require('lru-cache');
+const l_pick      = require('lodash.pick');
+const l_toArray   = require('lodash.toarray');
+const l_extend    = require('lodash.assignin');
+const l_cloneDeep = require('lodash.clonedeep');
+const lru_params  = [ 'max', 'maxAge', 'length', 'dispose', 'stale' ];
+const deepFreeze  = require('./lib/freeze');
+const vfs         = require('very-fast-args');
 
 module.exports = function (options) {
-  const cache      = new LRU(_.pick(options, lru_params));
+  const cache      = new LRU(l_pick(options, lru_params));
   const load       = options.load;
   const hash       = options.hash;
   const bypass     = options.bypass;
@@ -15,7 +18,7 @@ module.exports = function (options) {
   const loading    = new Map();
 
   if (options.disable) {
-      _.extend(load, { del }, options);
+      l_extend(load, { del }, options);
     return load;
   }
 
@@ -47,7 +50,7 @@ module.exports = function (options) {
 
     if (fromCache) {
       if (clone) {
-        return callback.apply(null, [null].concat(fromCache).map(_.cloneDeep));
+        return callback.apply(null, [null].concat(fromCache).map(l_cloneDeep));
       }
       return callback.apply(null, [null].concat(fromCache));
     }
@@ -76,7 +79,7 @@ module.exports = function (options) {
         loading.delete(key);
         waiting.forEach(function (callback) {
           if (clone) {
-            return callback.apply(null, args.map(_.cloneDeep));
+            return callback.apply(null, args.map(l_cloneDeep));
           }
           callback.apply(null, args);
         });
@@ -90,14 +93,14 @@ module.exports = function (options) {
 
   result.keys = cache.keys.bind(cache);
 
-  _.extend(result, { del }, options);
+  l_extend(result, { del }, options);
 
   return result;
 };
 
 
 module.exports.sync = function (options) {
-  const cache = new LRU(_.pick(options, lru_params));
+  const cache = new LRU(l_pick(options, lru_params));
   const load = options.load;
   const hash = options.hash;
   const disable = options.disable;
@@ -110,7 +113,7 @@ module.exports.sync = function (options) {
   }
 
   const result = function () {
-    var args = _.toArray(arguments);
+    var args = l_toArray(arguments);
 
     if (bypass && bypass.apply(self, arguments)) {
       return load.apply(self, arguments);
