@@ -44,4 +44,12 @@ describe('lru-memoizer sync', function () {
     } catch(err) {}
     assert.notInclude(memoized.keys(), ['0-2']);
   });
+
+  it('should expose del method', function () {
+    assert.isFunction(memoized.del);
+    memoized(1, 2);
+    assert.includeMembers(memoized.keys(), ['1-2']);
+    memoized.del(1, 2);
+    assert.notInclude(memoized.keys(), ['1-2']);
+  });
 });

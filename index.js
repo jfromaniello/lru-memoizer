@@ -30,7 +30,7 @@ module.exports = function (options) {
     const callback   = args.slice(-1).pop();
     const self       = this;
 
-    var key;
+    let key;
 
     if (bypass && bypass.apply(self, parameters)) {
       return load.apply(self, args);
@@ -43,7 +43,7 @@ module.exports = function (options) {
       key = hash.apply(self, parameters);
     }
 
-    var fromCache = cache.get(key);
+    const fromCache = cache.get(key);
 
     if (fromCache) {
       if (clone) {
@@ -110,15 +110,15 @@ module.exports.sync = function (options) {
   }
 
   const result = function () {
-    var args = _.toArray(arguments);
+    const args = _.toArray(arguments);
 
     if (bypass && bypass.apply(self, arguments)) {
       return load.apply(self, arguments);
     }
 
-    var key = hash.apply(self, args);
+    const key = hash.apply(self, args);
 
-    var fromCache = cache.get(key);
+    const fromCache = cache.get(key);
 
     if (fromCache) {
       return fromCache;
@@ -135,6 +135,11 @@ module.exports.sync = function (options) {
   };
 
   result.keys = cache.keys.bind(cache);
+
+  result.del = (...args) => {
+    const key = hash.apply(self, args);
+    return cache.del(key);
+  };
 
   return result;
 };
