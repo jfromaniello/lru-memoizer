@@ -15,7 +15,7 @@ module.exports = function (options) {
   const loading    = new Map();
 
   if (options.disable) {
-      _.extend(load, { del }, options);
+      _.extend(load, { del: del }, options);
     return load;
   }
 
@@ -90,7 +90,7 @@ module.exports = function (options) {
 
   result.keys = cache.keys.bind(cache);
 
-  _.extend(result, { del }, options);
+  _.extend(result, { del: del }, options);
 
   return result;
 };
