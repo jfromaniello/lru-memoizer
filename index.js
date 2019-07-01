@@ -13,6 +13,9 @@ module.exports = function (options) {
   const freeze     = options.freeze;
   const clone      = options.clone;
   const loading    = new Map();
+  const onHit      = options.onHit;
+  const onMiss     = options.onMiss;
+  const onQueue    = options.onQueue;
 
   if (options.disable) {
       _.extend(load, { del }, options);
@@ -33,6 +36,10 @@ module.exports = function (options) {
     var key;
 
     if (bypass && bypass.apply(self, parameters)) {
+      if (onMiss) {
+        onMiss.apply(self, parameters);
+      }
+
       return load.apply(self, args);
     }
 
@@ -46,6 +53,10 @@ module.exports = function (options) {
     var fromCache = cache.get(key);
 
     if (fromCache) {
+      if (onHit) {
+        onHit.apply(self, parameters);
+      }
+
       if (clone) {
         return callback.apply(null, [null].concat(fromCache).map(_.cloneDeep));
       }
@@ -53,6 +64,10 @@ module.exports = function (options) {
     }
 
     if (!loading.get(key)) {
+      if (onMiss) {
+        onMiss.apply(self, parameters);
+      }
+
       loading.set(key, []);
 
       load.apply(self, parameters.concat(function (err) {
@@ -84,6 +99,10 @@ module.exports = function (options) {
 
       }));
     } else {
+      if (onQueue) {
+        onQueue.apply(self, parameters);
+      }
+
       loading.get(key).push(callback);
     }
   };
