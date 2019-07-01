@@ -1,5 +1,6 @@
 const LRU        = require('lru-cache');
 const _          = require('lodash');
+const events    = require('events');
 const lru_params = [ 'max', 'maxAge', 'length', 'dispose', 'stale' ];
 const deepFreeze = require('./lib/freeze');
 const vfs        = require('very-fast-args');
@@ -13,9 +14,7 @@ module.exports = function (options) {
   const freeze     = options.freeze;
   const clone      = options.clone;
   const loading    = new Map();
-  const onHit      = options.onHit;
-  const onMiss     = options.onMiss;
-  const onQueue    = options.onQueue;
+  const emitter    = new events.EventEmitter();
 
   if (options.disable) {
       _.extend(load, { del }, options);
@@ -27,6 +26,10 @@ module.exports = function (options) {
     cache.del(key);
   }
 
+  function emit(event, parameters) {
+    emitter.emit.apply(emitter, [event].concat(parameters))
+  }
+
   const result = function () {
     const args       = vfs.apply(null, arguments);
     const parameters = args.slice(0, -1);
@@ -36,9 +39,7 @@ module.exports = function (options) {
     var key;
 
     if (bypass && bypass.apply(self, parameters)) {
-      if (onMiss) {
-        onMiss.apply(self, parameters);
-      }
+      emit('miss', parameters);
 
       return load.apply(self, args);
     }
@@ -53,9 +54,7 @@ module.exports = function (options) {
     var fromCache = cache.get(key);
 
     if (fromCache) {
-      if (onHit) {
-        onHit.apply(self, parameters);
-      }
+      emit('hit', parameters);
 
       if (clone) {
         return callback.apply(null, [null].concat(fromCache).map(_.cloneDeep));
@@ -64,9 +63,7 @@ module.exports = function (options) {
     }
 
     if (!loading.get(key)) {
-      if (onMiss) {
-        onMiss.apply(self, parameters);
-      }
+      emit('miss', parameters);
 
       loading.set(key, []);
 
@@ -99,15 +96,14 @@ module.exports = function (options) {
 
       }));
     } else {
-      if (onQueue) {
-        onQueue.apply(self, parameters);
-      }
+      emit('queue', parameters);
 
       loading.get(key).push(callback);
     }
   };
 
   result.keys = cache.keys.bind(cache);
+  result.on = emitter.on.bind(emitter);
 
   _.extend(result, { del }, options);
 
@@ -123,20 +119,21 @@ module.exports.sync = function (options) {
   const bypass = options.bypass;
   const self = this;
   const itemMaxAge = options.itemMaxAge;
-  const onHit      = options.onHit;
-  const onMiss     = options.onMiss;
+  const emitter = new events.EventEmitter();
 
   if (disable) {
     return load;
+  }
+
+  function emit(event, parameters) {
+    emitter.emit.apply(emitter, [event].concat(parameters))
   }
 
   const result = function () {
     var args = _.toArray(arguments);
 
     if (bypass && bypass.apply(self, arguments)) {
-      if (onMiss) {
-        onMiss.apply(self, parameters);
-      }
+      emit('miss', args);
 
       return load.apply(self, arguments);
     }
@@ -146,16 +143,12 @@ module.exports.sync = function (options) {
     var fromCache = cache.get(key);
 
     if (fromCache) {
-      if (onHit) {
-        onHit.apply(self, parameters);
-      }
+      emit('hit', args);
 
       return fromCache;
     }
 
-    if (onMiss) {
-      onMiss.apply(self, parameters);
-    }
+    emit('miss', args);
 
     const result = load.apply(self, args);
     if (itemMaxAge) {
@@ -168,6 +161,7 @@ module.exports.sync = function (options) {
   };
 
   result.keys = cache.keys.bind(cache);
+  result.on = emitter.on.bind(emitter);
 
   return result;
 };
