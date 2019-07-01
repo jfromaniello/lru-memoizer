@@ -123,6 +123,8 @@ module.exports.sync = function (options) {
   const bypass = options.bypass;
   const self = this;
   const itemMaxAge = options.itemMaxAge;
+  const onHit      = options.onHit;
+  const onMiss     = options.onMiss;
 
   if (disable) {
     return load;
@@ -132,6 +134,10 @@ module.exports.sync = function (options) {
     var args = _.toArray(arguments);
 
     if (bypass && bypass.apply(self, arguments)) {
+      if (onMiss) {
+        onMiss.apply(self, parameters);
+      }
+
       return load.apply(self, arguments);
     }
 
@@ -140,7 +146,15 @@ module.exports.sync = function (options) {
     var fromCache = cache.get(key);
 
     if (fromCache) {
+      if (onHit) {
+        onHit.apply(self, parameters);
+      }
+
       return fromCache;
+    }
+
+    if (onMiss) {
+      onMiss.apply(self, parameters);
     }
 
     const result = load.apply(self, args);
