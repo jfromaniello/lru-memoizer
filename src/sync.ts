@@ -2,56 +2,65 @@ import LRU from 'lru-cache';
 import { EventEmitter } from 'events';
 import deepClone from 'lodash.clonedeep';
 import { deepFreeze } from './freeze';
+import { ResultBase, IParamsBase} from './util';
 
-export type SyncLoadFunction<TPar1, TPar2, TPar3, TResult> =
-  (() => TResult) |
-  ((arg: TPar1) => TResult) |
-  ((arg1: TPar1, arg2: TPar2) => TResult) |
-  ((arg1: TPar1, arg2: TPar2, arg3: TPar3) => TResult);
+interface IMemoizedSync<T1, T2, T3, T4, T5, T6, TResult> extends ResultBase {
+  (arg1: T1): TResult;
+  (arg1: T1, arg2: T2): TResult;
+  (arg1: T1, arg2: T2, arg3: T3): TResult;
+  (arg1: T1, arg2: T2, arg3: T3, arg4: T4): TResult;
+  (
+      arg1: T1,
+      arg2: T2,
+      arg3: T3,
+      arg4: T4,
+      arg5: T5
+  ): TResult;
+  (
+      arg1: T1,
+      arg2: T2,
+      arg3: T3,
+      arg4: T4,
+      arg5: T5,
+      arg6: T6
+  ): TResult;
+}
 
-export interface SyncParams<TPar1, TPar2, TPar3, TResult> extends LRU.Options<string, any> {
+
+interface IMemoizableFunctionSync<T1, T2, T3, T4, T5, T6, TResult> {
+  (): TResult;
+  (arg1: T1): TResult;
+  (arg1: T1, arg2: T2): TResult;
+  (arg1: T1, arg2: T2, arg3: T3): TResult;
+  (arg1: T1, arg2: T2, arg3: T3, arg4: T4): TResult;
+  (
+      arg1: T1,
+      arg2: T2,
+      arg3: T3,
+      arg4: T4,
+      arg5: T5
+  ): TResult;
+  (
+      arg1: T1,
+      arg2: T2,
+      arg3: T3,
+      arg4: T4,
+      arg5: T5,
+      arg6: T6
+  ): TResult;
+  ( ...args: any[] ): TResult;
+}
+
+export interface SyncParams<T1, T2, T3, T4, T5, T6, TResult> extends IParamsBase<T1, T2, T3, T4, T5, T6, TResult> {
   /**
    * The function that loads the resource when is not in the cache.
    */
-  load: SyncLoadFunction<TPar1, TPar2, TPar3, TResult>;
-
-  /**
-   * A function to generate the key of the cache.
-   */
-  hash: (arg1?: TPar1, arg2?: TPar2, arg3?: TPar3) => string;
-
-  /**
-   * Return true if the result should not be retrieved from the cache.
-   */
-  bypass?: (arg1?: TPar1, arg2?: TPar2, arg3?: TPar3) => boolean;
-
-  /**
-   * An optional function to indicate the maxAge of an specific item.
-   */
-  itemMaxAge: ((result: TResult) => number) |
-        ((arg: TPar1, result: TResult) => number) |
-        ((arg1: TPar1, arg2: TPar2, result: TResult) => number) |
-        ((arg1: TPar1, arg2: TPar2, arg3: TPar3, result: TResult) => number);
-
-  /**
-   * Indicates if the resource should be freezed.
-   */
-  freeze?: boolean;
-
-  /**
-   * Indicates if the resource should be cloned before is returned.
-   */
-  clone?: boolean;
-
-  /**
-   * Disable the cache and executes the load logic directly.
-   */
-  disable?: boolean;
+  load: IMemoizableFunctionSync<T1, T2, T3, T4, T5, T6, TResult>;
 }
 
-export function syncMemoizer<TPar1, TPar2, TPar3, TResult>(
-    options: SyncParams<TPar1, TPar2, TPar3, TResult>
-) : SyncLoadFunction<TPar1, TPar2, TPar3, TResult> {
+export function syncMemoizer<T1, T2, T3, T4, T5, T6, TResult>(
+    options: SyncParams<T1, T2, T3, T4, T5, T6, TResult>
+) : IMemoizedSync<T1, T2, T3, T4, T5, T6, TResult> {
   const cache      = new LRU(options);
   const load       = options.load;
   const hash       = options.hash;
@@ -61,12 +70,19 @@ export function syncMemoizer<TPar1, TPar2, TPar3, TResult>(
   const clone      = options.clone;
   const emitter    = new EventEmitter();
 
+  const defaultResult = Object.assign({
+    del,
+    reset: () => cache.reset(),
+    keys: cache.keys.bind(cache),
+    on: emitter.on.bind(emitter),
+    once: emitter.once.bind(emitter)
+  }, options);
+
   if (options.disable) {
-    return Object.assign(load, { del }, options);
+    return Object.assign(load, defaultResult);
   }
 
-  function del(arg1?: TPar1, arg2?: TPar2, arg3?: TPar3) {
-    // @ts-ignore
+  function del() {
     const key = hash(...arguments);
     cache.del(key);
   }
@@ -75,13 +91,13 @@ export function syncMemoizer<TPar1, TPar2, TPar3, TResult>(
     emitter.emit(event, ...parameters);
   }
 
-  const result : SyncLoadFunction<TPar1, TPar2, TPar3, TResult> = function (
+  const result : IMemoizableFunctionSync<T1, T2, T3, T4, T5, T6, TResult> = function (
     ...args: any[]
   ) {
+
     if (bypass && bypass(...args)) {
       emit('miss', ...args);
-      // @ts-ignore
-      return load(...arguments);
+      return load(...args);
     }
 
     var key = hash(...args);
@@ -95,7 +111,6 @@ export function syncMemoizer<TPar1, TPar2, TPar3, TResult>(
     }
 
     emit('miss', ...args);
-    //@ts-ignore
     const result = load(...args);
     if (freeze) { deepFreeze(result); }
     if (clone) { deepClone(result); }
@@ -109,10 +124,5 @@ export function syncMemoizer<TPar1, TPar2, TPar3, TResult>(
     return result;
   };
 
-  return Object.assign(result, {
-    del,
-    keys: cache.keys.bind(cache),
-    on: emitter.on.bind(emitter),
-    once: emitter.once.bind(emitter)
-  }, options);
+  return Object.assign(result, defaultResult);
 }

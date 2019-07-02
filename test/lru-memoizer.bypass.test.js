@@ -20,6 +20,8 @@ describe('lru-memoizer (bypass)', function () {
       },
       max: 10
     });
+
+
   });
 
   it('should call the load function every time', function (done) {

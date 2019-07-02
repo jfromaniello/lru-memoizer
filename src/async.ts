@@ -3,56 +3,79 @@ import { EventEmitter } from 'events';
 import cloneDeep from 'lodash.clonedeep';
 import { deepFreeze } from './freeze';
 import { syncMemoizer } from './sync';
+import { INodeStyleCallBack, ResultBase, IParamsBase} from './util';
 
-export type LoadFunction<TPar1, TPar2, TPar3, TCallback> =
-  ((callback: TCallback) => void) |
-  ((arg: TPar1, callback: TCallback) => void) |
-  ((arg1: TPar1, arg2: TPar2, callback: TCallback) => void) |
-  ((arg1: TPar1, arg2: TPar2, arg3: TPar3, callback: TCallback) => void);
+interface IMemoized<T1, T2, T3, T4, T5, T6, TResult> extends ResultBase {
+  (arg1: T1, cb: INodeStyleCallBack<TResult>): void;
+  (arg1: T1, arg2: T2, cb: INodeStyleCallBack<TResult>): void;
+  (arg1: T1, arg2: T2, arg3: T3, cb: INodeStyleCallBack<TResult>): void;
+  (arg1: T1, arg2: T2, arg3: T3, arg4: T4, cb: INodeStyleCallBack<TResult>): void;
+  (
+      arg1: T1,
+      arg2: T2,
+      arg3: T3,
+      arg4: T4,
+      arg5: T5,
+      cb: INodeStyleCallBack<TResult>
+  ): void;
+  (
+      arg1: T1,
+      arg2: T2,
+      arg3: T3,
+      arg4: T4,
+      arg5: T5,
+      arg6: T6,
+      cb: INodeStyleCallBack<TResult>
+  ): void;
+}
 
-export interface AsyncParams1<TPar1, TPar2, TPar3, TCallback> extends LRU.Options<string, any> {
+interface IMemoizableFunction<T1, T2, T3, T4, T5, T6, TResult> {
+  (cb: INodeStyleCallBack<TResult>): void;
+  (arg1: T1, cb: INodeStyleCallBack<TResult>): void;
+  (arg1: T1, arg2: T2, cb: INodeStyleCallBack<TResult>): void;
+  (
+      arg1: T1,
+      arg2: T2,
+      arg3: T3,
+      cb: INodeStyleCallBack<TResult>
+  ): void;
+  (
+      arg1: T1,
+      arg2: T2,
+      arg3: T3,
+      arg4: T4,
+      cb: INodeStyleCallBack<TResult>
+  ): void;
+  (
+      arg1: T1,
+      arg2: T2,
+      arg3: T3,
+      arg4: T4,
+      arg5: T5,
+      cb: INodeStyleCallBack<TResult>
+  ): void;
+  (
+      arg1: T1,
+      arg2: T2,
+      arg3: T3,
+      arg4: T4,
+      arg5: T5,
+      arg6: T6,
+      cb: INodeStyleCallBack<TResult>
+  ): void;
+  (...rest: any[]): void;
+}
+
+interface AsyncParams<T1, T2, T3, T4, T5, T6, TResult> extends IParamsBase<T1, T2, T3, T4, T5, T6, TResult> {
   /**
    * The function that loads the resource when is not in the cache.
    */
-  load: LoadFunction<TPar1, TPar2, TPar3, TCallback>;
-
-  /**
-   * A function to generate the key of the cache.
-   */
-  hash: (arg1?: TPar1, arg2?: TPar2, arg3?: TPar3) => string;
-
-  /**
-   * Return true if the result should not be retrieved from the cache.
-   */
-  bypass?: (arg1?: TPar1, arg2?: TPar2, arg3?: TPar3) => boolean;
-
-  /**
-   * An optional function to indicate the maxAge of an specific item.
-   */
-  itemMaxAge: ((...results: any[]) => number) |
-        ((arg: TPar1, ...results: any[]) => number) |
-        ((arg1: TPar1, arg2: TPar2, ...results: any[]) => number) |
-        ((arg1: TPar1, arg2: TPar2, arg3: TPar3, ...results: any[]) => number);
-
-  /**
-   * Indicates if the resource should be freezed.
-   */
-  freeze?: boolean;
-
-  /**
-   * Indicates if the resource should be cloned before is returned.
-   */
-  clone?: boolean;
-
-  /**
-   * Disable the cache and executes the load logic directly.
-   */
-  disable?: boolean;
+  load: IMemoizableFunction<T1, T2, T3, T4, T5, T6, TResult>;
 }
 
-function asyncMemoizer<TPar1, TPar2, TPar3, TCallback>(
-    options: AsyncParams1<TPar1, TPar2, TPar3, TCallback>
-) : LoadFunction<TPar1,TPar2,TPar3,TCallback> {
+function asyncMemoizer<T1, T2, T3, T4, T5, T6, TResult>(
+    options: AsyncParams<T1, T2, T3, T4, T5, T6, TResult>
+) : IMemoized<T1, T2, T3, T4, T5, T6, TResult> {
   const cache      = new LRU(options);
   const load       = options.load;
   const hash       = options.hash;
@@ -63,13 +86,20 @@ function asyncMemoizer<TPar1, TPar2, TPar3, TCallback>(
   const loading    = new Map();
   const emitter    = new EventEmitter();
 
+  const defaultResult = Object.assign({
+    del,
+    reset: () => cache.reset(),
+    keys: cache.keys.bind(cache),
+    on: emitter.on.bind(emitter),
+    once: emitter.once.bind(emitter)
+  }, options);
+
   if (options.disable) {
-    return Object.assign(load, { del }, options);
+    return Object.assign(load, defaultResult);
   }
 
-  function del(arg1?: TPar1, arg2?: TPar2, arg3?: TPar3) {
-    // @ts-ignore
-    const key = hash(...arguments);
+  function del(...args: any[]) {
+    const key = hash(...args);
     cache.del(key);
   }
 
@@ -77,7 +107,7 @@ function asyncMemoizer<TPar1, TPar2, TPar3, TCallback>(
     emitter.emit(event, ...parameters);
   }
 
-  const result : LoadFunction<TPar1, TPar2, TPar3, TCallback> = function (
+  const result : IMemoizableFunction<T1, T2, T3, T4, T5, T6, TResult> = function (
     ...args: any[]
   ) {
     const parameters = args.slice(0, -1);
@@ -86,7 +116,6 @@ function asyncMemoizer<TPar1, TPar2, TPar3, TCallback>(
 
     if (bypass && bypass(...parameters)) {
       emit('miss', ...parameters);
-      // @ts-ignore
       return load(...args);
     }
 
@@ -149,12 +178,8 @@ function asyncMemoizer<TPar1, TPar2, TPar3, TCallback>(
     }
   };
 
-  return Object.assign(result, {
-    del,
-    keys: cache.keys.bind(cache),
-    on: emitter.on.bind(emitter),
-    once: emitter.once.bind(emitter)
-  }, options);
+  // @ts-ignore
+  return Object.assign(result, defaultResult);
 }
 
 asyncMemoizer.sync = syncMemoizer;

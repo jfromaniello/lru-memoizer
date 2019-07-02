@@ -14,7 +14,6 @@ export function deepFreeze (o: any) {
           deepFreeze(o[prop]);
         }
     });
-
   }
 
   return o;
