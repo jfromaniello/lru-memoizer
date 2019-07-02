@@ -25,7 +25,7 @@
     "@types/lru-cache": "^5.1.0",
     "@types/node": "^12.0.10",
     "chai": "^3.5.0",
-    "mocha": "~2.2.5",
+    "mocha": "^6.1.4",
     "sinon": "^7.3.2",
     "typescript": "^3.5.2"
   }
