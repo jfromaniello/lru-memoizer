@@ -1,4 +1,4 @@
-const memoizer = require('./..');
+const memoizer = require('../lib/index.js');
 const assert = require('chai').assert;
 
 describe('lru-memoizer (bypass)', function () {

@@ -1,7 +1,7 @@
 // From https://raw.githubusercontent.com/nikoskalogridis/deep-freeze/fb921b32064dce1645197be2bf975fe0385450b0/index.js
 // which is sadly, no longer maintained
 
-module.exports = function deepFreeze (o) {
+export function deepFreeze (o: any) {
   if (o) {
     Object.freeze(o);
 
@@ -16,5 +16,6 @@ module.exports = function deepFreeze (o) {
     });
 
   }
+
   return o;
 };
