@@ -1,4 +1,5 @@
 declare module 'lru-memoizer' {
+    type Listener = (...args: any[]) => void;
     type INodeStyleCallBack<SuccessArg> = (
         err: NodeJS.ErrnoException,
         result?: SuccessArg
@@ -27,6 +28,9 @@ declare module 'lru-memoizer' {
             cb: INodeStyleCallBack<TResult>
         ): void;
         keys: () => string[];
+        on(event: 'hit', handler: Listener): void;
+        on(event: 'miss', handler: Listener): void;
+        on(event: 'queue', handler: Listener): void;
     }
 
     interface IMemoizedSync<TResult> {
@@ -50,6 +54,8 @@ declare module 'lru-memoizer' {
             arg6: T6
         ): TResult;
         keys: () => string[];
+        on(event: 'hit', handler: Listener): void;
+        on(event: 'miss', handler: Listener): void;
     }
 
     interface IMemoizableFunction<TResult> {
