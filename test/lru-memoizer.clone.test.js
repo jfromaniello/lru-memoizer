@@ -10,7 +10,7 @@ describe('lru-memoizer (clone)', function () {
     memoized = memoizer({
       load: function (key, callback) {
         loadTimes++;
-        callback(null, { foo: 'bar' , buffer: new Buffer('1234') });
+        callback(null, { foo: 'bar' , buffer: Buffer.from('1234') });
       },
       hash: function (key) {
         return key;

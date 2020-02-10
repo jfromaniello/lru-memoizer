@@ -83,18 +83,18 @@ export interface IBypassFunction<T1, T2, T3, T4, T5, T6> {
 }
 
 export interface IMaxAgeFunction<T1, T2, T3, T4, T5, T6, TResult> {
-  (res: TResult): boolean;
-  (arg1: T1, res: TResult): boolean;
-  (arg1: T1, arg2: T2, res: TResult): boolean;
-  (arg1: T1, arg2: T2, arg3: T3, res: TResult): boolean;
-  (arg1: T1, arg2: T2, arg3: T3, arg4: T4, res: TResult): boolean;
+  (res: TResult): number;
+  (arg1: T1, res: TResult): number;
+  (arg1: T1, arg2: T2, res: TResult): number;
+  (arg1: T1, arg2: T2, arg3: T3, res: TResult): number;
+  (arg1: T1, arg2: T2, arg3: T3, arg4: T4, res: TResult): number;
   (
       arg1: T1,
       arg2: T2,
       arg3: T3,
       arg4: T4,
       arg5: T5,
-      res: TResult): boolean;
+      res: TResult): number;
   (
       arg1: T1,
       arg2: T2,
@@ -102,7 +102,10 @@ export interface IMaxAgeFunction<T1, T2, T3, T4, T5, T6, TResult> {
       arg4: T4,
       arg5: T5,
       arg6: T6,
-      res: TResult): boolean;
+      res: TResult): number;
+  (
+    ...rest: any[]
+  ): number;
 }
 
 export interface IParamsBase<T1, T2, T3, T4, T5, T6, TResult> extends LRU.Options<string, any>  {
@@ -136,4 +139,11 @@ export interface IParamsBase<T1, T2, T3, T4, T5, T6, TResult> extends LRU.Option
    * Disable the cache and executes the load logic directly.
    */
   disable?: boolean;
+
+  /**
+   * Do not queue requests if initial call is more than `queueMaxAge` milliseconds old.
+   * Instead, invoke `load` again and create a new queue.
+   * Defaults to 1000ms.
+   */
+  queueMaxAge?: number;
 }

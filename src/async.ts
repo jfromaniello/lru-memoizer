@@ -5,6 +5,13 @@ import { deepFreeze } from './freeze';
 import { syncMemoizer } from './sync';
 import { INodeStyleCallBack, ResultBase, IParamsBase} from './util';
 
+type Callback = (err?: any, ...args: any[]) => void;
+
+type PendingLoad = {
+  queue: Callback[];
+  expiresAt: number;
+}
+
 interface IMemoized<T1, T2, T3, T4, T5, T6, TResult> extends ResultBase {
   (arg1: T1, cb: INodeStyleCallBack<TResult>): void;
   (arg1: T1, arg2: T2, cb: INodeStyleCallBack<TResult>): void;
@@ -83,10 +90,11 @@ function asyncMemoizer<T1, T2, T3, T4, T5, T6, TResult>(
   const itemMaxAge = options.itemMaxAge;
   const freeze     = options.freeze;
   const clone      = options.clone;
-  const loading    = new Map();
+  const queueMaxAge = options.queueMaxAge || 1000;
+  const loading    = new Map<string, PendingLoad>();
   const emitter    = new EventEmitter();
 
-  const defaultResult = Object.assign({
+  const memoizerMethods = Object.assign({
     del,
     reset: () => cache.reset(),
     keys: cache.keys.bind(cache),
@@ -95,7 +103,7 @@ function asyncMemoizer<T1, T2, T3, T4, T5, T6, TResult>(
   }, options);
 
   if (options.disable) {
-    return Object.assign(load, defaultResult);
+    return Object.assign(load, memoizerMethods);
   }
 
   function del(...args: any[]) {
@@ -103,15 +111,37 @@ function asyncMemoizer<T1, T2, T3, T4, T5, T6, TResult>(
     cache.del(key);
   }
 
+  function add(key: string, parameters: any[], result: any[]) {
+    if (freeze) {
+      result.forEach(deepFreeze);
+    }
+
+    if (itemMaxAge) {
+      cache.set(key, result, itemMaxAge(...parameters.concat(result)));
+    } else {
+      cache.set(key, result);
+    }
+  }
+
+  function runCallbacks(callbacks: Callback[], args: any[]) {
+    for (const callback of callbacks) {
+      // Simulate async call when returning from cache
+      // and yield between callback resolution
+      if (clone) {
+        setImmediate(callback, ...args.map(cloneDeep));
+      } else {
+        setImmediate(callback, ...args);
+      }
+    }
+  }
+
   function emit(event: string, ...parameters: any[]) {
     emitter.emit(event, ...parameters);
   }
 
-  const result : IMemoizableFunction<T1, T2, T3, T4, T5, T6, TResult> = function (
-    ...args: any[]
-  ) {
+  function memoizedFunction(...args: any[]) {
     const parameters = args.slice(0, -1);
-    const callback   = args.slice(-1).pop();
+    const callback: Callback = args.slice(-1).pop();
     let key: string;
 
     if (bypass && bypass(...parameters)) {
@@ -126,60 +156,52 @@ function asyncMemoizer<T1, T2, T3, T4, T5, T6, TResult>(
       key = hash(...parameters);
     }
 
-    var fromCache = cache.get(key);
-
+    const fromCache = cache.get(key);
     if (fromCache) {
       emit('hit', ...parameters);
-
-      if (clone) {
-        return callback(...[null].concat(fromCache).map(cloneDeep));
-      }
-      return callback(...[null].concat(fromCache));
+      // found, invoke callback
+      return runCallbacks([callback], [null].concat(fromCache));
     }
 
-    if (!loading.get(key)) {
-      emit('miss', ...parameters);
-
-      loading.set(key, []);
-
-      // @ts-ignore
-      load(...parameters.concat((...args: any[]) => {
-        const err = args[0];
-        //we store the result only if the load didn't fail.
-        if (!err) {
-          const result = args.slice(1);
-          if (freeze) {
-            args.forEach(deepFreeze);
-          }
-          if (itemMaxAge) {
-            // @ts-ignore
-            cache.set(key, result, itemMaxAge(...parameters.concat(result)));
-          } else {
-            cache.set(key, result);
-          }
-        }
-
-        //immediately call every other callback waiting
-        const waiting = loading.get(key).concat(callback);
-        loading.delete(key);
-        waiting.forEach(function (callback: Function) {
-          if (clone) {
-            return callback(...args.map(cloneDeep));
-          }
-          callback(...args);
-        });
-        /////////
-
-      }));
-    } else {
+    const pendingLoad = loading.get(key);
+    if (pendingLoad && pendingLoad.expiresAt > Date.now()) {
+      // request already in progress, queue and return
+      pendingLoad.queue.push(callback);
       emit('queue', ...parameters);
-
-      loading.get(key).push(callback);
+      return;
     }
+
+    emit('miss', ...parameters);
+
+    // no pending request or not resolved before expiration
+    // create a new queue and invoke load
+    const queue = [ callback ];
+    loading.set(key, {
+      queue,
+      expiresAt: Date.now() + queueMaxAge
+    });
+
+    const started = Date.now();
+    const loadHandler = (...args: any[]) => {
+      const err = args[0];
+      if (!err) {
+        add(key, parameters, args.slice(1));
+      }
+
+      // this can potentially delete a different queue than `queue` if
+      // this callback was called after expiration.
+      // that will only cause a new call to be performed and a new queue to be
+      // created
+      loading.delete(key);
+
+      emit('loaded', Date.now() - started, ...parameters);
+      runCallbacks(queue, args);
+    };
+
+    load(...parameters, loadHandler);
   };
 
-  // @ts-ignore
-  return Object.assign(result, defaultResult);
+  return Object.assign(memoizedFunction, memoizerMethods);
 }
 
 asyncMemoizer.sync = syncMemoizer;
