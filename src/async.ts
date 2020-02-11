@@ -173,15 +173,16 @@ function asyncMemoizer<T1, T2, T3, T4, T5, T6, TResult>(
 
     emit('miss', ...parameters);
 
+    const started = Date.now();
+
     // no pending request or not resolved before expiration
     // create a new queue and invoke load
     const queue = [ callback ];
     loading.set(key, {
       queue,
-      expiresAt: Date.now() + queueMaxAge
+      expiresAt: started + queueMaxAge
     });
 
-    const started = Date.now();
     const loadHandler = (...args: any[]) => {
       const err = args[0];
       if (!err) {
