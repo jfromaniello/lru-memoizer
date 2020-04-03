@@ -91,11 +91,16 @@ export function syncMemoizer<T1, T2, T3, T4, T5, T6, TResult>(
     emitter.emit(event, ...parameters);
   }
 
+  function isPromise(result: any): boolean {
+    // detect native, bluebird, A+ promises
+    return result && result.then && typeof result.then === 'function';
+  }
+
   function processResult(result: any) {
     let res = result;
 
     if (clone) {
-      if (res instanceof Promise) {
+      if (isPromise(res)) {
         res = res.then(deepClone);
       } else {
         res = deepClone(res);
@@ -103,7 +108,7 @@ export function syncMemoizer<T1, T2, T3, T4, T5, T6, TResult>(
     }
 
     if (freeze) {
-      if (res instanceof Promise) {
+      if (isPromise(res)) {
         res = res.then(deepFreeze);
       } else {
         deepFreeze(res);
