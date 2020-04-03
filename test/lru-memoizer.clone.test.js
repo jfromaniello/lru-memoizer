@@ -1,38 +1,39 @@
 const memoizer = require('./..');
 const assert = require('chai').assert;
 
-describe('lru-memoizer (clone)', function () {
-  var loadTimes = 0, memoized;
+describe('lru-memoizer (clone)', () => {
+  let loadTimes = 0, memoized;
 
-  beforeEach(function () {
+  beforeEach(() => {
     loadTimes = 0;
 
     memoized = memoizer({
-      load: function (key, callback) {
+      load: (key, callback) => {
         loadTimes++;
-        callback(null, { foo: 'bar' , buffer: Buffer.from('1234') });
+        callback(null, { foo: key, buffer: Buffer.from('1234') });
       },
-      hash: function (key) {
+      hash: (key) => {
         return key;
       },
       clone: true
     });
   });
 
-  it('should return a clone every time with the same cached structure', function (done) {
-    memoized('test', function (err, r1) {
+  it('should return a clone every time with the same cached structure', (done) => {
+    memoized('bar', (err, r1) => {
 
       assert.isNull(err);
       assert.strictEqual(loadTimes, 1);
       assert.equal(r1.foo, 'bar');
       r1.foo = 'bax';
 
-      memoized('test', function (err, r2) {
+      memoized('bar', (err, r2) => {
         assert.isNull(err);
 
         assert.strictEqual(loadTimes, 1);
         assert.equal(r2.foo, 'bar');
         assert.notStrictEqual(r1, r2);
+        assert.notEqual(r1, r2);
 
         done();
       });
