@@ -91,6 +91,28 @@ export function syncMemoizer<T1, T2, T3, T4, T5, T6, TResult>(
     emitter.emit(event, ...parameters);
   }
 
+  function processResult(result: any) {
+    let res = result;
+
+    if (clone) {
+      if (res instanceof Promise) {
+        res = res.then(deepClone);
+      } else {
+        res = deepClone(res);
+      }
+    }
+
+    if (freeze) {
+      if (res instanceof Promise) {
+        res = res.then(deepFreeze);
+      } else {
+        deepFreeze(res);
+      }
+    }
+
+    return res;
+  }
+
   const result : IMemoizableFunctionSync<T1, T2, T3, T4, T5, T6, TResult> = function (
     ...args: any[]
   ) {
@@ -107,13 +129,12 @@ export function syncMemoizer<T1, T2, T3, T4, T5, T6, TResult>(
     if (fromCache) {
       emit('hit', ...args);
 
-      return fromCache;
+      return processResult(fromCache);
     }
 
     emit('miss', ...args);
     const result = load(...args);
-    if (freeze) { deepFreeze(result); }
-    if (clone) { deepClone(result); }
+
     if (itemMaxAge) {
       // @ts-ignore
       cache.set(key, result, itemMaxAge(...args.concat([ result ])));
@@ -121,7 +142,7 @@ export function syncMemoizer<T1, T2, T3, T4, T5, T6, TResult>(
       cache.set(key, result);
     }
 
-    return result;
+    return processResult(result);
   };
 
   return Object.assign(result, defaultResult);
