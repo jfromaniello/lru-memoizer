@@ -14,6 +14,8 @@ The `load` function can have N parameters and the last one must be a callback. T
 
 The `hash` function purpose is generate a custom hash for storing results. It has all the arguments applied to it minus the callback, and must return an string synchronous.
 
+The `disable` function allows you to conditionally disable the use of the cache.  Useful for test environments.
+
 The `freeze` option (defaults to **false**) allows you to deep-freeze the result of the async function.
 
 The `clone` option (defaults to **false**) allows you to deep-clone the result every time is returned from the cache.
@@ -35,6 +37,9 @@ var memoizedGet = memoizer({
   hash: function (options) {
     return options.url + qs.stringify(options.qs);
   },
+
+  //don't cache in test environment
+  disable: isTestEnv(),
 
   //all other params for the LRU cache.
   max: 100,
