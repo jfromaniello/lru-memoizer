@@ -1,7 +1,7 @@
 {
   "name": "lru-memoizer",
   "description": "Memoize functions results using an lru-cache.",
-  "version": "2.1.4",
+  "version": "2.2.0",
   "author": "José F. Romaniello <jfromaniello@gmail.com> (http://joseoncode.com)",
   "repository": {
     "url": "git://github.com/jfromaniello/lru-memoizer.git"
