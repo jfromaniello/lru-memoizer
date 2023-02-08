@@ -12,6 +12,7 @@
     "lru"
   ],
   "main": "./lib/index.js",
+  "types": "./lib/index.d.ts",
   "scripts": {
     "prepare": "tsc",
     "test": "npm run prepare && mocha"
