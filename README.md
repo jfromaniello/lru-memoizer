@@ -12,7 +12,7 @@ This module uses an [lru-cache](https://github.com/isaacs/node-lru-cache) intern
 
 The `load` function can have N parameters and the last one must be a callback. The callback should be an errback (first parameter is `err`).
 
-The `hash` function purpose is generate a custom hash for storing results. It has all the arguments applied to it minus the callback, and must return an string synchronous.
+The `hash` function purpose is generate a custom hash for storing results. It has all the arguments applied to it minus the callback, and must return a synchronous string.
 
 The `disable` function allows you to conditionally disable the use of the cache.  Useful for test environments.
 
@@ -23,10 +23,9 @@ The `clone` option (defaults to **false**) allows you to deep-clone the result e
 ## Usage
 
 ```javascript
+const memoizer = require('lru-memoizer');
 
-var memoizer = require('lru-memoizer');
-
-var memoizedGet = memoizer({
+const memoizedGet = memoizer({
   //defines how to load the resource when
   //it is not in the cache.
   load: function (options, callback) {
@@ -55,17 +54,17 @@ memoizedGet({
 
 ```
 
-## Sync lru-memoizer
+## Synchronous lru-memoizer
 
-Use `memoizer.sync` to cache things that are slow to calculate or methods returning promises.
+Use `memoizer.sync` to cache things that are slow to calculate, methods returning promises, or only if you don't want to use a callback and want it synchronous.
 
-```
-var memoizer = require('lru-memoizer');
-var memoizedGet = memoizer.sync({
+```javascript
+const memoizer = require('lru-memoizer');
+const memoizedGet = memoizer.sync({
   //defines how to load the resource when
   //it is not in the cache.
   load: function (params) {
-    //return something_hard_to_compute;s
+    return somethingHardToCompute();
   },
 
   //defines how to create a cache key from the params.
@@ -81,7 +80,7 @@ var memoizedGet = memoizer.sync({
 
 ## Similar modules
 
-This module is very similar to [async-cache](https://github.com/isaacs/async-cache), the main difference is the `hash` function.
+This module is very similar to [async-cache](https://github.com/isaacs/async-cache)<sup>(deprecated)</sup>, the main difference is the `hash` function.
 
 ## License
 
