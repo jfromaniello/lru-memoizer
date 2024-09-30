@@ -1,4 +1,4 @@
-import LRU from 'lru-cache';
+import { LRUCache } from 'lru-cache';
 export type Listener = (...as: any[]) => void;
 export type INodeStyleCallBack<Success> = (
   err: Error | null,
@@ -107,40 +107,40 @@ export interface IMaxAgeFunctionPlus {
   (...rest: any[]): number;
 }
 
-export interface IParamsBase0<TResult> extends IParamsBaseCommons {
+export type IParamsBase0<TResult> = IParamsBaseCommons & {
   hash: IHashingFunction0;
   bypass?: IBypassFunction0;
   itemMaxAge?: IMaxAgeFunction0<TResult>;
 }
-export interface IParamsBase1<T1, TResult> extends IParamsBaseCommons {
+export type IParamsBase1<T1, TResult> = IParamsBaseCommons & {
   hash: IHashingFunction1<T1>;
   bypass?: IBypassFunction1<T1>;
   itemMaxAge?: IMaxAgeFunction1<T1, TResult>;
 }
-export interface IParamsBase2<T1, T2, TResult> extends IParamsBaseCommons {
+export type IParamsBase2<T1, T2, TResult> = IParamsBaseCommons & {
   hash: IHashingFunction2<T1, T2>;
   bypass?: IBypassFunction2<T1, T2>;
   itemMaxAge?: IMaxAgeFunction2<T1, T2, TResult>;
 }
-export interface IParamsBase3<T1, T2, T3, TResult> extends IParamsBaseCommons {
+export type IParamsBase3<T1, T2, T3, TResult> = IParamsBaseCommons & {
   hash: IHashingFunction3<T1, T2, T3>;
   bypass?: IBypassFunction3<T1, T2, T3>;
   itemMaxAge?: IMaxAgeFunction3<T1, T2, T3, TResult>;
 }
-export interface IParamsBase4<T1, T2, T3, T4, TResult>
-  extends IParamsBaseCommons {
+export type IParamsBase4<T1, T2, T3, T4, TResult>
+  = IParamsBaseCommons & {
   hash: IHashingFunction4<T1, T2, T3, T4>;
   bypass?: IBypassFunction4<T1, T2, T3, T4>;
   itemMaxAge?: IMaxAgeFunction4<T1, T2, T3, T4, TResult>;
 }
-export interface IParamsBase5<T1, T2, T3, T4, T5, TResult>
-  extends IParamsBaseCommons {
+export type IParamsBase5<T1, T2, T3, T4, T5, TResult>
+  = IParamsBaseCommons & {
   hash: IHashingFunction5<T1, T2, T3, T4, T5>;
   bypass?: IBypassFunction5<T1, T2, T3, T4, T5>;
   itemMaxAge?: IMaxAgeFunction5<T1, T2, T3, T4, T5, TResult>;
 }
-export interface IParamsBase6<T1, T2, T3, T4, T5, T6, TResult>
-  extends IParamsBaseCommons {
+export type IParamsBase6<T1, T2, T3, T4, T5, T6, TResult>
+  = IParamsBaseCommons & {
   /**
    * A function to generate the key of the cache.
    */
@@ -156,12 +156,12 @@ export interface IParamsBase6<T1, T2, T3, T4, T5, T6, TResult>
    */
   itemMaxAge?: IMaxAgeFunction6<T1, T2, T3, T4, T5, T6, TResult>;
 }
-export interface IParamsBasePlus extends IParamsBaseCommons {
+export type IParamsBasePlus = IParamsBaseCommons & {
   hash: IHashingFunctionPlus;
   bypass?: IBypassFunctionPlus;
   itemMaxAge?: IMaxAgeFunctionPlus;
 }
-interface IParamsBaseCommons extends LRU.Options<string, any> {
+type IParamsBaseCommons = LRUCache.Options<string, any, unknown> & {
   /**
    * Indicates if the resource should be freezed.
    */

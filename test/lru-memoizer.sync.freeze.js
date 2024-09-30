@@ -17,7 +17,8 @@ describe('lru-memoizer sync (freeze)', () => {
         hash: (key) => {
           return key;
         },
-        freeze: true
+        freeze: true,
+        max: 10
       });
     });
 
@@ -48,7 +49,8 @@ describe('lru-memoizer sync (freeze)', () => {
         hash: (key) => {
           return key;
         },
-        freeze: true
+        freeze: true,
+        max: 10
       });
     });
 

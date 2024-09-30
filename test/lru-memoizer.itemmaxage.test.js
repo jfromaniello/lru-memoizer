@@ -20,7 +20,7 @@ describe('lru-memoizer (itemMaxAge)', function () {
         return a + '-' + b;
       },
       max: 10,
-      maxAge: 500
+      maxAge: 500,
     });
 
     memoized(1,2, function (err, result) {

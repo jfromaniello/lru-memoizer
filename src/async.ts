@@ -1,4 +1,4 @@
-import LRU from 'lru-cache';
+import { LRUCache } from 'lru-cache';
 import { EventEmitter } from 'events';
 import cloneDeep from 'lodash.clonedeep';
 import { deepFreeze } from './freeze';
@@ -58,32 +58,32 @@ interface IMemoizableFunctionPlus {
   (...rest: any[]): void;
 }
 
-interface AsyncParamsPlus extends IParamsBasePlus {
+type AsyncParamsPlus = IParamsBasePlus & {
   load: IMemoizableFunctionPlus;
 }
-interface AsyncParams0<TResult> extends IParamsBase0<TResult> {
+type AsyncParams0<TResult> = IParamsBase0<TResult> & {
   load: IMemoizableFunction0<TResult>;
 }
-interface AsyncParams1<T1, TResult> extends IParamsBase1<T1, TResult> {
+type AsyncParams1<T1, TResult> = IParamsBase1<T1, TResult> & {
   load: IMemoizableFunction1<T1, TResult>;
 }
-interface AsyncParams2<T1, T2, TResult> extends IParamsBase2<T1, T2, TResult> {
+type AsyncParams2<T1, T2, TResult> = IParamsBase2<T1, T2, TResult> & {
   load: IMemoizableFunction2<T1, T2, TResult>;
 }
-interface AsyncParams3<T1, T2, T3, TResult>
-  extends IParamsBase3<T1, T2, T3, TResult> {
+type AsyncParams3<T1, T2, T3, TResult>
+  = IParamsBase3<T1, T2, T3, TResult> & {
   load: IMemoizableFunction3<T1, T2, T3, TResult>;
 }
-interface AsyncParams4<T1, T2, T3, T4, TResult>
-  extends IParamsBase4<T1, T2, T3, T4, TResult> {
+type AsyncParams4<T1, T2, T3, T4, TResult>
+  = IParamsBase4<T1, T2, T3, T4, TResult> & {
   load: IMemoizableFunction4<T1, T2, T3, T4, TResult>;
 }
-interface AsyncParams5<T1, T2, T3, T4, T5, TResult>
-  extends IParamsBase5<T1, T2, T3, T4, T5, TResult> {
+type AsyncParams5<T1, T2, T3, T4, T5, TResult>
+  = IParamsBase5<T1, T2, T3, T4, T5, TResult> & {
   load: IMemoizableFunction5<T1, T2, T3, T4, T5, TResult>;
 }
-interface AsyncParams6<T1, T2, T3, T4, T5, T6, TResult>
-  extends IParamsBase6<T1, T2, T3, T4, T5, T6, TResult> {
+type AsyncParams6<T1, T2, T3, T4, T5, T6, TResult>
+  = IParamsBase6<T1, T2, T3, T4, T5, T6, TResult> & {
   /**
    * The function that loads the resource when is not in the cache.
    */
@@ -114,7 +114,7 @@ function asyncMemoizer<T1, T2, T3, T4, T5, T6, TResult>(
 function asyncMemoizer<T1, T2, T3, T4, T5, T6, TResult>(
   options: AsyncParamsPlus
 ): IMemoized<T1, T2, T3, T4, T5, T6, TResult> {
-  const cache      = new LRU(options);
+  const cache      = new LRUCache(options);
   const load       = options.load;
   const hash       = options.hash;
   const bypass     = options.bypass;
@@ -127,8 +127,8 @@ function asyncMemoizer<T1, T2, T3, T4, T5, T6, TResult>(
 
   const memoizerMethods = Object.assign({
     del,
-    reset: () => cache.reset(),
-    keys: cache.keys.bind(cache),
+    reset: () => cache.clear(),
+    keys: () => [...cache.keys()],
     on: emitter.on.bind(emitter),
     once: emitter.once.bind(emitter)
   }, options);
@@ -139,7 +139,7 @@ function asyncMemoizer<T1, T2, T3, T4, T5, T6, TResult>(
 
   function del(...args: any[]) {
     const key = hash(...args);
-    cache.del(key);
+    cache.delete(key);
   }
 
   function add(key: string, parameters: any[], result: any[]) {
@@ -148,7 +148,7 @@ function asyncMemoizer<T1, T2, T3, T4, T5, T6, TResult>(
     }
 
     if (itemMaxAge) {
-      cache.set(key, result, itemMaxAge(...parameters.concat(result)));
+      cache.set(key, result, {ttl: itemMaxAge(...parameters.concat(result))});
     } else {
       cache.set(key, result);
     }

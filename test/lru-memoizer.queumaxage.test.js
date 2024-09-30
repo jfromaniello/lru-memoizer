@@ -29,7 +29,8 @@ describe('lru-memoizer (queueMaxAge)', function () {
       queueMaxAge: 10,
       hash: function (a, b) {
         return a + '-' + b;
-      }
+      },
+      max: 10
     });
 
     const observer1 = observer();

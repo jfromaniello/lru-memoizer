@@ -1,4 +1,4 @@
-import LRU from 'lru-cache';
+import { LRUCache } from 'lru-cache';
 import { EventEmitter } from 'events';
 import deepClone from 'lodash.clonedeep';
 import { deepFreeze } from './freeze';
@@ -48,33 +48,33 @@ interface IMemoizableFunctionSyncPlus<TResult> {
   (...args: any[]): TResult;
 }
 
-export interface SyncParams0<TResult> extends IParamsBase0<TResult> {
+export type SyncParams0<TResult> = IParamsBase0<TResult> & {
   load: IMemoizableFunctionSync0<TResult>;
 }
-export interface SyncParams1<T1, TResult> extends IParamsBase1<T1, TResult> {
+export type SyncParams1<T1, TResult> = IParamsBase1<T1, TResult> & {
   load: IMemoizableFunctionSync1<T1, TResult>;
 }
-export interface SyncParams2<T1, T2, TResult>
-  extends IParamsBase2<T1, T2, TResult> {
+export type SyncParams2<T1, T2, TResult>
+  = IParamsBase2<T1, T2, TResult> & {
   load: IMemoizableFunctionSync2<T1, T2, TResult>;
 }
-export interface SyncParams3<T1, T2, T3, TResult>
-  extends IParamsBase3<T1, T2, T3, TResult> {
+export type SyncParams3<T1, T2, T3, TResult>
+  = IParamsBase3<T1, T2, T3, TResult> & {
   load: IMemoizableFunctionSync3<T1, T2, T3, TResult>;
 }
-export interface SyncParams4<T1, T2, T3, T4, TResult>
-  extends IParamsBase4<T1, T2, T3, T4, TResult> {
+export type SyncParams4<T1, T2, T3, T4, TResult>
+  = IParamsBase4<T1, T2, T3, T4, TResult> & {
   load: IMemoizableFunctionSync4<T1, T2, T3, T4, TResult>;
 }
-export interface SyncParams5<T1, T2, T3, T4, T5, TResult>
-  extends IParamsBase5<T1, T2, T3, T4, T5, TResult> {
+export type SyncParams5<T1, T2, T3, T4, T5, TResult>
+  = IParamsBase5<T1, T2, T3, T4, T5, TResult> & {
   load: IMemoizableFunctionSync5<T1, T2, T3, T4, T5, TResult>;
 }
-export interface SyncParams6<T1, T2, T3, T4, T5, T6, TResult>
-  extends IParamsBase6<T1, T2, T3, T4, T5, T6, TResult> {
+export type SyncParams6<T1, T2, T3, T4, T5, T6, TResult>
+  = IParamsBase6<T1, T2, T3, T4, T5, T6, TResult>  & {
   load: IMemoizableFunctionSync6<T1, T2, T3, T4, T5, T6, TResult>;
 }
-export interface SyncParamsPlus<TResult> extends IParamsBasePlus {
+export type SyncParamsPlus<TResult> = IParamsBasePlus & {
   load: IMemoizableFunctionSyncPlus<TResult>;
 }
 export function syncMemoizer<TResult>(
@@ -101,7 +101,7 @@ export function syncMemoizer<T1, T2, T3, T4, T5, T6, TResult>(
 export function syncMemoizer<T1, T2, T3, T4, T5, T6, TResult>(
   options: SyncParamsPlus<TResult>
 ): IMemoizedSync<T1, T2, T3, T4, T5, T6, TResult> {
-  const cache      = new LRU(options);
+  const cache      = new LRUCache(options);
   const load       = options.load;
   const hash       = options.hash;
   const bypass     = options.bypass;
@@ -112,8 +112,8 @@ export function syncMemoizer<T1, T2, T3, T4, T5, T6, TResult>(
 
   const defaultResult = Object.assign({
     del,
-    reset: () => cache.reset(),
-    keys: cache.keys.bind(cache),
+    reset: () => cache.clear(),
+    keys: () => [...cache.keys()],
     on: emitter.on.bind(emitter),
     once: emitter.once.bind(emitter),
   }, options);
@@ -124,7 +124,7 @@ export function syncMemoizer<T1, T2, T3, T4, T5, T6, TResult>(
 
   function del() {
     const key = hash(...arguments);
-    cache.del(key);
+    cache.delete(key);
   }
 
   function emit(event: string, ...parameters: any[]) {
@@ -181,7 +181,7 @@ export function syncMemoizer<T1, T2, T3, T4, T5, T6, TResult>(
 
     if (itemMaxAge) {
       // @ts-ignore
-      cache.set(key, result, itemMaxAge(...args.concat([ result ])));
+      cache.set(key, result, {ttl: itemMaxAge(...args.concat([ result ]))});
     } else {
       cache.set(key, result);
     }
