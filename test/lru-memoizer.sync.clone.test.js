@@ -17,7 +17,8 @@ describe('lru-memoizer sync (clone)', () => {
         hash: (key) => {
           return key;
         },
-        clone: true
+        clone: true,
+        max: 10
       });
     });
 
@@ -49,7 +50,8 @@ describe('lru-memoizer sync (clone)', () => {
         hash: (key) => {
           return key;
         },
-        clone: true
+        clone: true,
+        max: 10
       });
     });
 

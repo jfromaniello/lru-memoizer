@@ -17,6 +17,7 @@ describe("lru-memoizer (freeze)", function () {
         return key;
       },
       freeze: true,
+      max: 10
     });
   });
 

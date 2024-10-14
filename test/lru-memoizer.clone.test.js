@@ -15,7 +15,8 @@ describe('lru-memoizer (clone)', () => {
       hash: (key) => {
         return key;
       },
-      clone: true
+      clone: true,
+      max: 10
     });
   });
 

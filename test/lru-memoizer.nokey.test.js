@@ -8,6 +8,7 @@ describe('lru-memoizer (no key)', function () {
     loadTimes = 0;
 
     memoized = memoizer({
+      max: 10,
       load: function (callback) {
         loadTimes++;
         return setTimeout(function () {
