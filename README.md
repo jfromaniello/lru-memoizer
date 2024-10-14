@@ -14,7 +14,7 @@ The `load` function can have N parameters and the last one must be a callback. T
 
 The `hash` function purpose is generate a custom hash for storing results. It has all the arguments applied to it minus the callback, and must return a synchronous string.
 
-The `disable` function allows you to conditionally disable the use of the cache.  Useful for test environments.
+The `disable` function allows you to conditionally disable the use of the cache. Useful for test environments.
 
 The `freeze` option (defaults to **false**) allows you to deep-freeze the result of the async function.
 
@@ -23,7 +23,7 @@ The `clone` option (defaults to **false**) allows you to deep-clone the result e
 ## Usage
 
 ```javascript
-const memoizer = require('lru-memoizer');
+const memoizer = require("lru-memoizer");
 
 const memoizedGet = memoizer({
   //defines how to load the resource when
@@ -42,16 +42,18 @@ const memoizedGet = memoizer({
 
   //all other params for the LRU cache.
   max: 100,
-  maxAge: 1000 * 60
+  ttl: 1000 * 60,
 });
 
-memoizedGet({
-  url: 'https://google.com',
-  qs: { foo: 123 }
-}, function (err, result, body) {
- //console.log(body);
-})
-
+memoizedGet(
+  {
+    url: "https://google.com",
+    qs: { foo: 123 },
+  },
+  function (err, result, body) {
+    //console.log(body);
+  }
+);
 ```
 
 ## Synchronous lru-memoizer
@@ -59,7 +61,7 @@ memoizedGet({
 Use `memoizer.sync` to cache things that are slow to calculate, methods returning promises, or only if you don't want to use a callback and want it synchronous.
 
 ```javascript
-const memoizer = require('lru-memoizer');
+const memoizer = require("lru-memoizer");
 const memoizedGet = memoizer.sync({
   //defines how to load the resource when
   //it is not in the cache.
@@ -74,7 +76,7 @@ const memoizedGet = memoizer.sync({
 
   //all other params for the LRU cache.
   max: 100,
-  maxAge: 1000 * 60
+  ttl: 1000 * 60,
 });
 ```
 

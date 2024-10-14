@@ -1,7 +1,7 @@
 var memoizer = require('./..');
 var assert = require('chai').assert;
 
-describe('lru-memoizer (queueMaxAge)', function () {
+describe('lru-memoizer (queueTTL)', function () {
   var loadTimes = 0, memoized;
 
   beforeEach(function () {
@@ -26,7 +26,7 @@ describe('lru-memoizer (queueMaxAge)', function () {
         loadTimes++;
         onResolve(() => callback(null, a + b));
       },
-      queueMaxAge: 10,
+      queueTTL: 10,
       hash: function (a, b) {
         return a + '-' + b;
       },

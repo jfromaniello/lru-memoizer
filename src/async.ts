@@ -72,23 +72,23 @@ type AsyncParams2<T1, T2, TResult> = IParamsBase2<T1, T2, TResult> & {
 }
 type AsyncParams3<T1, T2, T3, TResult>
   = IParamsBase3<T1, T2, T3, TResult> & {
-  load: IMemoizableFunction3<T1, T2, T3, TResult>;
-}
+    load: IMemoizableFunction3<T1, T2, T3, TResult>;
+  }
 type AsyncParams4<T1, T2, T3, T4, TResult>
   = IParamsBase4<T1, T2, T3, T4, TResult> & {
-  load: IMemoizableFunction4<T1, T2, T3, T4, TResult>;
-}
+    load: IMemoizableFunction4<T1, T2, T3, T4, TResult>;
+  }
 type AsyncParams5<T1, T2, T3, T4, T5, TResult>
   = IParamsBase5<T1, T2, T3, T4, T5, TResult> & {
-  load: IMemoizableFunction5<T1, T2, T3, T4, T5, TResult>;
-}
+    load: IMemoizableFunction5<T1, T2, T3, T4, T5, TResult>;
+  }
 type AsyncParams6<T1, T2, T3, T4, T5, T6, TResult>
   = IParamsBase6<T1, T2, T3, T4, T5, T6, TResult> & {
-  /**
-   * The function that loads the resource when is not in the cache.
-   */
-  load: IMemoizableFunction6<T1, T2, T3, T4, T5, T6, TResult>;
-}
+    /**
+     * The function that loads the resource when is not in the cache.
+     */
+    load: IMemoizableFunction6<T1, T2, T3, T4, T5, T6, TResult>;
+  }
 
 function asyncMemoizer<TResult>(
   options: AsyncParams0<TResult>
@@ -114,16 +114,16 @@ function asyncMemoizer<T1, T2, T3, T4, T5, T6, TResult>(
 function asyncMemoizer<T1, T2, T3, T4, T5, T6, TResult>(
   options: AsyncParamsPlus
 ): IMemoized<T1, T2, T3, T4, T5, T6, TResult> {
-  const cache      = new LRUCache(options);
-  const load       = options.load;
-  const hash       = options.hash;
-  const bypass     = options.bypass;
-  const itemMaxAge = options.itemMaxAge;
-  const freeze     = options.freeze;
-  const clone      = options.clone;
-  const queueMaxAge = options.queueMaxAge || 1000;
-  const loading    = new Map<string, PendingLoad>();
-  const emitter    = new EventEmitter();
+  const cache = new LRUCache(options);
+  const load = options.load;
+  const hash = options.hash;
+  const bypass = options.bypass;
+  const itemTTL = options.itemTTL;
+  const freeze = options.freeze;
+  const clone = options.clone;
+  const queueTTL = options.queueTTL || 1000;
+  const loading = new Map<string, PendingLoad>();
+  const emitter = new EventEmitter();
 
   const memoizerMethods = Object.assign({
     del,
@@ -147,8 +147,8 @@ function asyncMemoizer<T1, T2, T3, T4, T5, T6, TResult>(
       result.forEach(deepFreeze);
     }
 
-    if (itemMaxAge) {
-      cache.set(key, result, {ttl: itemMaxAge(...parameters.concat(result))});
+    if (itemTTL) {
+      cache.set(key, result, { ttl: itemTTL(...parameters.concat(result)) });
     } else {
       cache.set(key, result);
     }
@@ -208,10 +208,10 @@ function asyncMemoizer<T1, T2, T3, T4, T5, T6, TResult>(
 
     // no pending request or not resolved before expiration
     // create a new queue and invoke load
-    const queue = [ callback ];
+    const queue = [callback];
     loading.set(key, {
       queue,
-      expiresAt: started + queueMaxAge
+      expiresAt: started + queueTTL
     });
 
     const loadHandler = (...args: any[]) => {

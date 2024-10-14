@@ -56,24 +56,24 @@ export type SyncParams1<T1, TResult> = IParamsBase1<T1, TResult> & {
 }
 export type SyncParams2<T1, T2, TResult>
   = IParamsBase2<T1, T2, TResult> & {
-  load: IMemoizableFunctionSync2<T1, T2, TResult>;
-}
+    load: IMemoizableFunctionSync2<T1, T2, TResult>;
+  }
 export type SyncParams3<T1, T2, T3, TResult>
   = IParamsBase3<T1, T2, T3, TResult> & {
-  load: IMemoizableFunctionSync3<T1, T2, T3, TResult>;
-}
+    load: IMemoizableFunctionSync3<T1, T2, T3, TResult>;
+  }
 export type SyncParams4<T1, T2, T3, T4, TResult>
   = IParamsBase4<T1, T2, T3, T4, TResult> & {
-  load: IMemoizableFunctionSync4<T1, T2, T3, T4, TResult>;
-}
+    load: IMemoizableFunctionSync4<T1, T2, T3, T4, TResult>;
+  }
 export type SyncParams5<T1, T2, T3, T4, T5, TResult>
   = IParamsBase5<T1, T2, T3, T4, T5, TResult> & {
-  load: IMemoizableFunctionSync5<T1, T2, T3, T4, T5, TResult>;
-}
+    load: IMemoizableFunctionSync5<T1, T2, T3, T4, T5, TResult>;
+  }
 export type SyncParams6<T1, T2, T3, T4, T5, T6, TResult>
-  = IParamsBase6<T1, T2, T3, T4, T5, T6, TResult>  & {
-  load: IMemoizableFunctionSync6<T1, T2, T3, T4, T5, T6, TResult>;
-}
+  = IParamsBase6<T1, T2, T3, T4, T5, T6, TResult> & {
+    load: IMemoizableFunctionSync6<T1, T2, T3, T4, T5, T6, TResult>;
+  }
 export type SyncParamsPlus<TResult> = IParamsBasePlus & {
   load: IMemoizableFunctionSyncPlus<TResult>;
 }
@@ -101,14 +101,14 @@ export function syncMemoizer<T1, T2, T3, T4, T5, T6, TResult>(
 export function syncMemoizer<T1, T2, T3, T4, T5, T6, TResult>(
   options: SyncParamsPlus<TResult>
 ): IMemoizedSync<T1, T2, T3, T4, T5, T6, TResult> {
-  const cache      = new LRUCache(options);
-  const load       = options.load;
-  const hash       = options.hash;
-  const bypass     = options.bypass;
-  const itemMaxAge = options.itemMaxAge;
-  const freeze     = options.freeze;
-  const clone      = options.clone;
-  const emitter    = new EventEmitter();
+  const cache = new LRUCache(options);
+  const load = options.load;
+  const hash = options.hash;
+  const bypass = options.bypass;
+  const itemTTL = options.itemTTL;
+  const freeze = options.freeze;
+  const clone = options.clone;
+  const emitter = new EventEmitter();
 
   const defaultResult = Object.assign({
     del,
@@ -179,9 +179,9 @@ export function syncMemoizer<T1, T2, T3, T4, T5, T6, TResult>(
     emit('miss', ...args);
     const result = load(...args);
 
-    if (itemMaxAge) {
+    if (itemTTL) {
       // @ts-ignore
-      cache.set(key, result, {ttl: itemMaxAge(...args.concat([ result ]))});
+      cache.set(key, result, { ttl: itemTTL(...args.concat([result])) });
     } else {
       cache.set(key, result);
     }
